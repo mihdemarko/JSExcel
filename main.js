@@ -26,43 +26,36 @@ var lastRow;
 
 
 for (var i = 0; i<= 100; i++){
-  (function(i){
+  // (function(i){
   rowName = 'tr' + i;
   var tr = new element(rowName, 'tr', null, rowName, 'table');
-  if (i===0){tr.node.style.backgroundColor = 'rgb(150,200,150)';}
   cells.push([]);
 
 
-  for (var j = 0; j<=23; j++){
-    (function(i,j) {
-      cellName = rowName.replace('r','d') + j;
-      var td = new element(cellName, 'td', null, cellName,rowName);
-      if (i>0 && j>0){
-        td.addEvent('click', function(event){
-          whiteAll (lastCol, lastRow, lastCell);
-          this.style.backgroundColor='rgb(230,230,230)';
-          this.style.border='2px solid rgb(100,150,200)';
-          lastCell = this;
-        });
-      }
-      cells[i].push(td);
-      if (j===0){
-        td.node.style.backgroundColor = 'rgb(150,200,150)';
-        td.node.style.borderColor = 'black';
-        td.node.style.width = '50px';
-        td.node.style.textAlign = 'center';
-      if (i>=1)  {
-        td.node.innerHTML = i.toString();}}
-    })(i,j);
-  }})(i);
+    for (var j = 0; j<=23; j++){
+        cellName = rowName.replace('r','d') + j;
+        var td = new element(cellName, 'td', null, cellName,rowName);
+        if (i>0 && j>0){
+          td.addEvent('click', function(event){
+            whiteAll (lastCol, lastRow, lastCell);
+            this.style.backgroundColor='rgb(230,230,230)';
+            this.style.border='2px solid rgb(100,150,200)';
+            lastCell = this;
+          });
+        }
+        cells[i].push(td);
+        if (j===0){
+          if (i>=1)  {
+            td.node.innerHTML = i.toString();}}
+    }
 }
 
 
 cells[0].forEach(function(cell,i){
   if (i>0){
     cell.node.innerHTML=alphabet[i-1];
-    cell.node.style.textAlign = 'center';
-    cell.node.style.borderColor = 'black';
+    // cell.node.style.textAlign = 'center';
+    // cell.node.style.borderColor = 'black';
     cell.addEvent('click', function(event){
       whiteAll (lastCol, lastRow, lastCell);
       for (var j=1;j <= cells.length-1; j++){
