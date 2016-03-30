@@ -1,19 +1,25 @@
-function element(name,tag,inner,className,appendElementClass) {
+function Element(name, tag, inner, className, parentElement) {
   this.name = name;
   this.node=document.createElement(tag);
   if (name === 'input') {this.node.value = inner;}
   if (inner) {this.node.innerHTML = inner;}
   if (className) {this.node.className = className;}
-  if (appendElementClass) {
-    document.getElementsByClassName(appendElementClass)[0].appendChild(this.node);
+  if (parentElement) {
+    if (typeof parentElement === 'string'){
+      document.getElementById(parentElement).appendChild(this.node);
+    } else if (parentElement.hasOwnProperty('node')){
+      parentElement.node.appendChild(this.node);
+    } else {
+      parentElement.appendChild(this.node);
+    }
   }
 }
 
-element.prototype.addEvent = function(event,func){
+Element.prototype.addEvent = function(event,func){
   this.node.addEventListener(event, func);
 };
 
-var table = new element('table','table',null,'table','tableDiv');
+var table = new Element('table', 'table', null, 'table', 'tableDiv');
 var alphabet = 'abcdefghijklmnopqrstuvwx'.toUpperCase().split('');
 
 
@@ -23,23 +29,31 @@ var cells = [];
 var lastCell;
 var lastCol;
 var lastRow;
+function cellClick (event){
+  return function () {
+      whiteAll (lastCol, lastRow, lastCell);
+      console.log(this.childNodes.length);
+      if (this.childNodes.length === 0){
+         var input = new Element('input', 'input', null, null, this);
+         input.node.focus();
+      }
+      this.style.backgroundColor='rgb(230,230,230)';
+      this.style.border='2px solid rgb(100,150,200)';
+      lastCell = this;
+    };
 
+}
 
 for (var i = 0; i<= 100; i++){
   rowName = 'tr' + i;
-  var tr = new element(rowName, 'tr', null, rowName, 'table');
+  var tr = new Element(rowName, 'tr', null, rowName, table);
   cells.push([]);
 
   for (var j = 0; j<=23; j++){
       cellName = rowName.replace('r','d') + j;
-      var td = new element(cellName, 'td', null, cellName,rowName);
+      var td = new Element(cellName, 'td', null, cellName, tr);
       if (i>0 && j>0){
-        td.addEvent('click', function(event){
-          whiteAll (lastCol, lastRow, lastCell);
-          this.style.backgroundColor='rgb(230,230,230)';
-          this.style.border='2px solid rgb(100,150,200)';
-          lastCell = this;
-        });
+        td.addEvent('click', cellClick(event));
       }
       cells[i].push(td);
       if (j===0){
@@ -64,16 +78,14 @@ cells[0].forEach(function(cell,i){
   );
 
 cells.forEach(function(row, i){
- if (i>0) {
-  row[0].addEvent('click', function(event){
-    whiteAll (lastCol, lastRow, lastCell);
-      this.parentElement.style.backgroundColor='rgb(200,200,200)';
-    lastRow = this.parentElement;
-  });
-}
-}
-
-  );
+  if (i>0) {
+    row[0].addEvent('click', function(event){
+      whiteAll (lastCol, lastRow, lastCell);
+        this.parentElement.style.backgroundColor='rgb(200,200,200)';
+      lastRow = this.parentElement;
+    });
+  }
+});
 
 
 function whiteCol(lastNode){
