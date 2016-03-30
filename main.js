@@ -29,8 +29,9 @@ var cells = [];
 var lastCell;
 var lastCol;
 var lastRow;
+
 function cellClick (event){
-  return function () {
+  return function (event) {
       whiteAll (lastCol, lastRow, lastCell);
       if (this.childNodes.length === 0){
         var input = new Element('input', 'input', null, null, this);
@@ -46,19 +47,93 @@ function cellClick (event){
       this.style.border='2px solid rgb(100,150,200)';
       lastCell = this;
     };
-
+}
+function buttonsPressCell (event){
+  return function (event) {
+    if (event.keyCode === 13) {
+      whiteCell(this);
+      console.log(this);
+    } else if (event.keyCode === 40) {
+      whiteCell(this);
+      var rowNum = parseInt(this.parentElement.className) + 1;
+      var column = document.getElementsByClassName(this.className);
+      cellClick ().bind(column[rowNum])();
+    } else if (event.keyCode === 38) {
+      whiteCell(this);
+      var rowNum = parseInt(this.parentElement.className);
+      if (rowNum > 1) {
+        rowNum -= 1;
+        var column = document.getElementsByClassName(this.className);
+        cellClick ().bind(column[rowNum])();
+      }
+    } else if (event.keyCode === 37) {
+      whiteCell(this);
+      var colLetter = alphabet[alphabet.indexOf(this.className)];
+      console.log(colLetter>'A');
+      if (colLetter>'A'){
+        colLetter = alphabet[alphabet.indexOf(colLetter)-1];
+        var column = document.getElementsByClassName(colLetter);
+        var rowNum = parseInt(this.parentElement.className);
+        cellClick ().bind(column[rowNum])();
+      }
+    } else if (event.keyCode === 39) {
+      whiteCell(this);
+      var colLetter = alphabet[alphabet.indexOf(this.className)+1];
+      var column = document.getElementsByClassName(colLetter);
+      var rowNum = parseInt(this.parentElement.className);
+      cellClick ().bind(column[rowNum])();
+    }
+  };
 }
 
+function whiteCol(lastNode){
+  var column = document.getElementsByClassName(lastNode.className);
+  for (var j=1;j <= column.length-1; j++){
+    column[j].style.backgroundColor='';
+  }
+}
+
+function whiteRow(lastNode){
+  lastNode.style.backgroundColor='';
+}
+
+function whiteCell(lastCell) {
+  lastCell.style.backgroundColor='';
+  lastCell.style.border='';
+  if (lastCell.childNodes[0]){
+    var text = lastCell.childNodes[0].value || lastCell.childNodes[0].data;
+    lastCell.removeChild(lastCell.childNodes[0]);
+    if (text) {
+      lastCell.appendChild(document.createTextNode(text));
+    }
+  }
+}
+
+function whiteAll (lastCol, lastRow, lastCell){
+  if (lastCell) {
+    whiteCell(lastCell);
+  }
+  if (lastCol) {
+    whiteCol(lastCol);
+  }
+  if (lastRow){
+    whiteRow(lastRow);
+  }
+}
+
+
 for (var i = 0; i<= 100; i++){
-  rowName = 'tr' + i;
+  rowName = '' + i;
   var tr = new Element(rowName, 'tr', null, rowName, table);
   cells.push([]);
 
   for (var j = 0; j<=23; j++){
-      cellName = rowName.replace('r','d') + j;
+      cellName = alphabet[j-1];
       var td = new Element(cellName, 'td', null, cellName, tr);
       if (i>0 && j>0){
         td.addEvent('click', cellClick(event));
+        // td.addEvent('keypress', enterPressCell(event));
+        td.addEvent('keydown', buttonsPressCell(event));
       }
       cells[i].push(td);
       if (j===0){
@@ -93,40 +168,3 @@ cells.forEach(function(row, i){
 });
 
 
-function whiteCol(lastNode){
-  var lastN = parseInt(lastNode.className.replace('td',''));
-  for (var j=1;j <= cells.length-1; j++){
-    cells[j][lastN].node.style.backgroundColor='';
-  }
-}
-
-function whiteRow(lastNode){
-  lastNode.style.backgroundColor='';
-}
-
-function whiteCell(lastCell) {
-  lastCell.style.backgroundColor='';
-  lastCell.style.border='';
-  if (lastCell.childNodes[0]){
-    var text = lastCell.childNodes[0].value;
-    lastCell.removeChild(lastCell.childNodes[0]);
-    if (text) {
-      lastCell.appendChild(document.createTextNode(text));
-    }
-    console.log(lastCell.childNodes.length);
-
-  }
-  // console.log(lastCell.childNodes[0].value, lastCell.value);
-}
-
-function whiteAll (lastCol, lastRow, lastCell){
-  if (lastCell) {
-    whiteCell(lastCell);
-  }
-  if (lastCol) {
-    whiteCol(lastCol);
-  }
-  if (lastRow){
-    whiteRow(lastRow);
-  }
-}

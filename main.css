@@ -68,6 +68,7 @@ td {
   height: 25px;
   padding: 0px;
   box-sizing: border-box;
+  text-align: right;
 }
 
 td input{
@@ -78,6 +79,7 @@ td input{
 
 td input:focus{
   background-color: rgb(245,255,245);
+  outline: none;
 }
 
 table {
