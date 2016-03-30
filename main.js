@@ -132,7 +132,6 @@ for (var i = 0; i<= 100; i++){
       var td = new Element(cellName, 'td', null, cellName, tr);
       if (i>0 && j>0){
         td.addEvent('click', cellClick(event));
-        // td.addEvent('keypress', enterPressCell(event));
         td.addEvent('keydown', buttonsPressCell(event));
       }
       cells[i].push(td);
