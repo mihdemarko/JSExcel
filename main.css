@@ -73,8 +73,11 @@ td {
 td input{
   width: 100%;
   height: 100%;
-  padding: 0px;
   border: none;
+}
+
+td input:focus{
+  background-color: rgb(245,255,245);
 }
 
 table {

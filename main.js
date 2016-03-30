@@ -32,10 +32,15 @@ var lastRow;
 function cellClick (event){
   return function () {
       whiteAll (lastCol, lastRow, lastCell);
-      console.log(this.childNodes.length);
       if (this.childNodes.length === 0){
-         var input = new Element('input', 'input', null, null, this);
+        var input = new Element('input', 'input', null, null, this);
          input.node.focus();
+      } else {
+        console.log(this);
+        var text = this.childNodes[0].data;
+        this.removeChild(this.childNodes[0]);
+        var input = new Element('input', 'input', text, null, this);
+        input.node.focus();
       }
       this.style.backgroundColor='rgb(230,230,230)';
       this.style.border='2px solid rgb(100,150,200)';
@@ -102,6 +107,16 @@ function whiteRow(lastNode){
 function whiteCell(lastCell) {
   lastCell.style.backgroundColor='';
   lastCell.style.border='';
+  if (lastCell.childNodes[0]){
+    var text = lastCell.childNodes[0].value;
+    lastCell.removeChild(lastCell.childNodes[0]);
+    if (text) {
+      lastCell.appendChild(document.createTextNode(text));
+    }
+    console.log(lastCell.childNodes.length);
+
+  }
+  // console.log(lastCell.childNodes[0].value, lastCell.value);
 }
 
 function whiteAll (lastCol, lastRow, lastCell){
