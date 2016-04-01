@@ -49,16 +49,22 @@ function cellClick (event){
     };
 }
 function buttonsPressCell (event){
+  var enter = 13;
+  var leftArrow = 37;
+  var upArrow = 38;
+  var rightArrow = 39;
+  var downArrow = 40;
+
   return function (event) {
-    if (event.keyCode === 13) {
+    if (event.keyCode === enter) {
       whiteCell(this);
       console.log(this);
-    } else if (event.keyCode === 40) {
+    } else if (event.keyCode === downArrow) {
       whiteCell(this);
       var rowNum = parseInt(this.parentElement.className) + 1;
       var column = document.getElementsByClassName(this.className);
       cellClick ().bind(column[rowNum])();
-    } else if (event.keyCode === 38) {
+    } else if (event.keyCode === upArrow) {
       whiteCell(this);
       var rowNum = parseInt(this.parentElement.className);
       if (rowNum > 1) {
@@ -66,7 +72,7 @@ function buttonsPressCell (event){
         var column = document.getElementsByClassName(this.className);
         cellClick ().bind(column[rowNum])();
       }
-    } else if (event.keyCode === 37) {
+    } else if (event.keyCode === leftArrow) {
       whiteCell(this);
       var colLetter = alphabet[alphabet.indexOf(this.className)];
       console.log(colLetter>'A');
@@ -76,7 +82,7 @@ function buttonsPressCell (event){
         var rowNum = parseInt(this.parentElement.className);
         cellClick ().bind(column[rowNum])();
       }
-    } else if (event.keyCode === 39) {
+    } else if (event.keyCode === rightArrow) {
       whiteCell(this);
       var colLetter = alphabet[alphabet.indexOf(this.className)+1];
       var column = document.getElementsByClassName(colLetter);
