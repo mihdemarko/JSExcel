@@ -167,3 +167,23 @@ cells.forEach(function(row, i){
 });
 
 
+function getJSONData(path, callback) {
+  var httpRequest = new XMLHttpRequest();
+  httpRequest.onreadystatechange = function() {
+     if (httpRequest.readyState === 4) {
+          if (httpRequest.status === 200) {
+                console.log(httpRequest.responseText);
+                var data = JSON.parse(httpRequest.responseText);
+                if (callback) callback(data);
+            }
+        }
+    };
+  httpRequest.open('GET', path);
+  httpRequest.send();
+}
+
+
+getJSONData('//localhost:3000/send', function(data){
+    console.log(data);
+console.log(data.a);
+});

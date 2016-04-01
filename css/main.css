@@ -2,8 +2,9 @@
 
 
 body {
-  width: 2400px;
   font-family: 'Ubuntu', sans-serif;
+  display: inline-block;
+
 }
 
 .header {
@@ -39,7 +40,7 @@ details summary::-webkit-details-marker {
 }
 
 #tableDiv {
-  width: 100%;
+  display: inline-block;
 }
 
 tr:nth-child(2n+1){
@@ -58,7 +59,7 @@ tr:first-child td{
 tr td:first-child {
   background-color: rgb(150,200,150);
   border:1px solid black;
-  width: 50px;
+  min-width: 50px;
   text-align: center;
   box-sizing: border-box;
 }
@@ -70,7 +71,7 @@ table, td {
 }
 
 td {
-  width: 100px;
+  min-width: 100px;
   height: 25px;
   padding: 0px;
   box-sizing: border-box;
@@ -99,7 +100,9 @@ td:hover{
 tr:first-child td:hover{
   background-color: rgb(240,240,240);
 }
-
+tr td:first-child:hover {
+  background-color: rgb(240,240,240);
+}
 
 .tabs {
   margin-left:45%;
@@ -128,5 +131,10 @@ tr:first-child td:hover{
   background: white;
   border-top: 1px solid white;
   z-index: 2;
+}
+
+td[active = true] {
+  background-color: rgb(230,230,230);
+  border: 2px solid rgb(100,150,200);
 }
 
