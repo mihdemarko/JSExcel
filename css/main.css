@@ -33,6 +33,7 @@ details {
   width: 100px;
   margin-left: 10px;
   background-color: rgb(200,200,200);
+  display: inline-block;
 }
 
 details summary::-webkit-details-marker {
@@ -138,3 +139,10 @@ td[active = true] {
   border: 2px solid rgb(100,150,200);
 }
 
+td[active-col = true] {
+  background-color: rgb(200,200,200);
+}
+
+tr[active = true] {
+  background-color: rgb(200,200,200);
+}
