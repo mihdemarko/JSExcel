@@ -175,6 +175,7 @@ var tableUI = {
     this.create('div', tabs);
     var number = tabs.children.length.toString();
     this.div.node.className = "tab";
+    this.div.addEvent('click', function(){tableUI.newTable(40, 15);});
     this.create('input', this.div.node);
     this.input.node.setAttribute('type', 'radio');
     this.input.node.setAttribute('name', 'tab-group-1');
