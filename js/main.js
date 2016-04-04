@@ -41,9 +41,7 @@ var tableUI = {
     }
   },
   col: {},
-  input:{
-    tag: 'input'
-  },
+
 
   mouseEvents: {
     cellClick: function (event){
@@ -172,12 +170,31 @@ var tableUI = {
     }
   },
 
+  newTab: function () {
+    var tabs = document.getElementsByClassName("tabs")[0];
+    this.create('div', tabs);
+    var number = tabs.children.length.toString();
+    this.div.node.className = "tab";
+    this.create('input', this.div.node);
+    this.input.node.setAttribute('type', 'radio');
+    this.input.node.setAttribute('name', 'tab-group-1');
+    this.input.node.checked = true;
+    this.input.node.id ='tab-' + number;
+    this.create('label', this.div.node);
+    this.label.node.innerHTML = 'Sheet ' + number;
+    this.label.node.setAttribute('for', this.input.node.id);
+    this.newTable(40, 15);
+  },
+
   newTable: function (rows, cols){
     var div = document.createElement("div");
     div.id = 'tableDiv';
     var footer = document.getElementsByClassName("footer")[0];
+    if (footer.previousSibling.id === 'tableDiv') {
+      document.body.removeChild(footer.previousSibling);}
     document.body.insertBefore(div, footer);
-    this.create('table', 'tableDiv');
+    this.create('table', div.id);
+
     for (var i = 0; i <= rows; i += 1){
       this.create('row', this.table.node);
       this.row.node.className = i.toString();
@@ -203,7 +220,18 @@ var tableUI = {
   },
 
   create: function (element, parentElement) {
-      this[element].node = document.createElement(this[element].tag);
+      if (this[element] && this[element].tag){
+        this[element].node = document.createElement(this[element].tag);
+      } else {
+        this[element] = {};
+        this[element].tag = element;
+        this[element].addEvent = function (eventName, func){
+          if (this.node) {
+            this.node.addEventListener(eventName, func);
+          }
+        };
+        this[element].node = document.createElement(element);
+      }
       if (parentElement) {
         if (typeof parentElement === 'string'){
           document.getElementById(parentElement).appendChild(this[element].node);
@@ -254,11 +282,17 @@ var tableUI = {
 
     }
 
+  },
+  initTable: function () {
+    this.newTab();
   }
 };
+tableUI.initTable();
+document.getElementById('new').addEventListener('click',function(){
+  tableUI.newTab();
 
+});
 
-tableUI.newTable(40, 15);
 
 
 
