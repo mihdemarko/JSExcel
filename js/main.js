@@ -173,6 +173,10 @@ var tableUI = {
   },
 
   newTable: function (rows, cols){
+    var div = document.createElement("div");
+    div.id = 'tableDiv';
+    var footer = document.getElementsByClassName("footer")[0];
+    document.body.insertBefore(div, footer);
     this.create('table', 'tableDiv');
     for (var i = 0; i <= rows; i += 1){
       this.create('row', this.table.node);
