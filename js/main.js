@@ -161,12 +161,19 @@ var tableUI = {
   },
 
   scrollEvents: {
-    horisontalAdd: function () {
+    horisontalAdd: function (event) {
+      var tr = document.body.querySelector("tr:first-child");
+      tr.style.left = 50-document.body.scrollLeft + 'px';
       if (tableUI.table.node.clientWidth < document.body.scrollLeft + screen.width){
         tableUI.addCol();
       }
     },
     verticalAdd: function () {
+      var td = document.body.querySelectorAll("td:first-child");
+      [].forEach.call(td, function (td, i) {
+        console.log(td, i);
+        td.style.top = 25*i + 30-document.body.scrollTop + 'px';
+      });
       if (tableUI.table.node.clientHeight < document.body.scrollTop + screen.height){
         tableUI.addRow();
       }

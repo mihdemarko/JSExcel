@@ -1,5 +1,8 @@
 @import url(https://fonts.googleapis.com/css?family=Ubuntu:300);
 
+* {
+  box-sizing: border-box;
+}
 
 body {
   font-family: 'Ubuntu', sans-serif;
@@ -42,6 +45,8 @@ details summary::-webkit-details-marker {
 
 #tableDiv {
   display: inline-block;
+  margin-top: 46px;
+  margin-left: 41px;
 }
 
 tr:nth-child(2n+1){
@@ -50,6 +55,14 @@ tr:nth-child(2n+1){
   box-sizing: border-box;
 }
 
+tr:first-child{
+  position: fixed;
+  left: 50px;
+  top:30px;
+}
+
+
+
 tr:first-child td{
   background-color: rgb(150,200,150);
   border:1px solid black;
@@ -57,12 +70,17 @@ tr:first-child td{
   box-sizing: border-box;
 }
 
+td:first-child{
+  position: fixed;
+  width: 30px;
+  left:0px;
+}
+
 tr td:first-child {
   background-color: rgb(150,200,150);
   border:1px solid black;
   min-width: 50px;
   text-align: center;
-  box-sizing: border-box;
 }
 
 table, td {
@@ -90,9 +108,6 @@ td input:focus{
   outline: none;
 }
 
-table {
-  margin-top:30px;
-}
 
 td:hover{
   background-color: rgb(240,240,240);
