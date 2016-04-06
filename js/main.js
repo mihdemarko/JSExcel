@@ -16,30 +16,7 @@ var tableUI = {
     },
   },
 
-  table: {
-    tag: 'table',
-    addEvent: function (eventName, func){
-      if (this.node) {
-        this.node.addEventListener(eventName, func());
-      }
-    }
-  },
-  row: {
-    tag: 'tr',
-    addEvent: function (eventName, func){
-      if (this.node) {
-        this.node.addEventListener(eventName, func());
-      }
-    }
-  },
-  cell: {
-    tag: 'td',
-    addEvent: function (eventName, func){
-      if (this.node) {
-        this.node.addEventListener(eventName, func);
-      }
-    }
-  },
+
   col: {},
 
 
@@ -49,21 +26,20 @@ var tableUI = {
         if (this.getAttribute("active") !== 'true'){
           tableUI.mouseEvents.disableActive ();
           this.setAttribute('active', 'true');
-          tableUI.cell.lastNode = this;
-          if (this.childNodes.length === 0){
+          tableUI.td.lastNode = this;
+        } else if (this.childNodes.length === 0){
+          tableUI.create('input', this);
+          tableUI.input.node.focus();
+        } else {
+          if (this.childNodes[0].data){
+            var text = this.childNodes[0].data;
+            this.removeChild(this.childNodes[0]);
             tableUI.create('input', this);
+            tableUI.input.node.value = text;
             tableUI.input.node.focus();
-          } else {
-            if (this.childNodes[0].data){
-              var text = this.childNodes[0].data;
-              this.removeChild(this.childNodes[0]);
-              tableUI.create('input', this);
-              tableUI.input.node.value = text;
-              tableUI.input.node.focus();
-              }
-            }
           }
-        };
+        }
+      };
     },
 
     rowClick:function (event){
@@ -71,7 +47,7 @@ var tableUI = {
         if (this.parentNode.getAttribute("active") !== 'true'){
           tableUI.mouseEvents.disableActive ();
           this.parentNode.setAttribute('active', 'true');
-          tableUI.row.lastNode = this.parentNode;
+          tableUI.tr.lastNode = this.parentNode;
         }
       };
     },
@@ -84,28 +60,30 @@ var tableUI = {
           for (var i = 1; i < col.length; i += 1){
             col[i].setAttribute('active-col', 'true');
           }
-        tableUI.col.lastCol = col;
+        tableUI.td.lastNode = col[0];
         }
       };
     },
 
     disableActive: function () {
-      if (tableUI.row.lastNode) {
-        tableUI.row.lastNode.setAttribute('active', 'false');
+      if (tableUI.tr.lastNode) {
+        tableUI.tr.lastNode.setAttribute('active', 'false');
       }
-      if (tableUI.cell.lastNode) {
-        tableUI.cell.lastNode.setAttribute('active', 'false');
-        if (tableUI.cell.lastNode.childNodes[0]){
-          var text = tableUI.cell.lastNode.childNodes[0].value || tableUI.cell.lastNode.childNodes[0].data;
-          tableUI.cell.lastNode.removeChild(tableUI.cell.lastNode.childNodes[0]);
+      if (tableUI.td.lastNode) {
+        var col = document.getElementsByClassName(tableUI.td.lastNode.className);
+        tableUI.td.lastNode.setAttribute('active', 'false');
+        if (tableUI.td.lastNode.childNodes[0]){
+          var text = tableUI.td.lastNode.childNodes[0].value || tableUI.td.lastNode.childNodes[0].data;
+          tableUI.td.lastNode.removeChild(tableUI.td.lastNode.childNodes[0]);
           if (text) {
-            tableUI.cell.lastNode.appendChild(document.createTextNode(text));
+            tableUI.td.lastNode.appendChild(document.createTextNode(text));
           }
         }
       }
-      if (tableUI.col.lastCol) {
-        for (var i = 1; i < tableUI.col.lastCol.length; i += 1){
-          tableUI.col.lastCol[i].setAttribute('active-col', 'false');
+
+      if (col && col[1].getAttribute("active-col")) {
+        for (var i = 1; i < col.length; i += 1){
+          col[i].setAttribute('active-col', 'false');
         }
       }
     }
@@ -122,30 +100,55 @@ var tableUI = {
   keyboardEvents:{
     onCells:function (event){
       return function (event) {
-        if (event.keyCode === tableUI.keyCodes.ENTER) {
-          tableUI.mouseEvents.disableActive(this);
+        var UI = tableUI;
+        var element = tableUI.td.lastNode;
+        var rowNum = parseInt(element.parentElement.className);
+        var colName = element.className;
+        var col = document.getElementsByClassName(colName);
+        var table = element.parentElement.parentElement;
+        if (event.keyCode === UI.keyCodes.ENTER) {
+          if (element.childNodes[0] && element.childNodes[0].tagName === 'INPUT'){
+            UI.mouseEvents.disableActive();
+          } else {
+            if (rowNum > 0) {
+              UI.mouseEvents.cellClick().bind(element)();
+            }
+
+          }
+
         } else if (event.keyCode === tableUI.keyCodes.DOWN_ARROW) {
-          tableUI.mouseEvents.disableActive(this);
-          tableUI.keyboardEvents.rowNum = parseInt(this.parentElement.className) + 1;
-          tableUI.keyboardEvents.column = document.getElementsByClassName(this.className);
-          tableUI.mouseEvents.cellClick ().bind(tableUI.keyboardEvents.column[tableUI.keyboardEvents.rowNum])();
+          if (element.parentElement.getAttribute("active") && element.parentElement.getAttribute("active") === 'true'){
+            UI.mouseEvents.rowClick().bind(col[rowNum + 1])();
+            console.log(col[rowNum + 1]);
+          } else {
+            UI.mouseEvents.cellClick().bind(col[rowNum + 1])();
+          }
+
         } else if (event.keyCode === tableUI.keyCodes.UP_ARROW) {
-          tableUI.mouseEvents.disableActive(this);
-          tableUI.keyboardEvents.rowNum = parseInt(this.parentElement.className);
-          if (tableUI.keyboardEvents.rowNum > 1) {
-            tableUI.keyboardEvents.rowNum -= 1;
-            tableUI.keyboardEvents.column = document.getElementsByClassName(this.className);
-            tableUI.mouseEvents.cellClick ().bind(tableUI.keyboardEvents.column[tableUI.keyboardEvents.rowNum])();
+
+          if (rowNum > 0) {
+            UI.mouseEvents.cellClick().bind(col[rowNum - 1])();
           }
+          if (rowNum === 1) {
+            UI.mouseEvents.colClick().bind(col[rowNum - 1])();
+          }
+
         } else if (event.keyCode === tableUI.keyCodes.LEFT_ARROW) {
-          tableUI.mouseEvents.disableActive(this);
-          tableUI.keyboardEvents.colLetter = tableUI.alphabet.alphabet[tableUI.alphabet.alphabet.indexOf(this.className)];
-          if (tableUI.keyboardEvents.colLetter>'A'){
-            tableUI.keyboardEvents.colLetter = tableUI.alphabet.alphabet[tableUI.alphabet.alphabet.indexOf(tableUI.keyboardEvents.colLetter)-1];
-            tableUI.keyboardEvents.column = document.getElementsByClassName(tableUI.keyboardEvents.colLetter);
-            tableUI.keyboardEvents.rowNum = parseInt(this.parentElement.className);
-            tableUI.mouseEvents.cellClick ().bind(tableUI.keyboardEvents.column[tableUI.keyboardEvents.rowNum])();
+
+          if (element.previousSibling){
+            if (element.previousSibling.className) {
+              if (col[1].getAttribute("active-col") && col[1].getAttribute("active-col") === 'true') {
+                UI.mouseEvents.colClick().bind(element.previousSibling)();
+              } else {
+                UI.mouseEvents.cellClick().bind(element.previousSibling)();
+              }
+            } else {
+              UI.mouseEvents.rowClick().bind(element.previousSibling)();
+            }
+
+
           }
+
         } else if (event.keyCode === tableUI.keyCodes.RIGHT_ARROW) {
           tableUI.mouseEvents.disableActive(this);
           tableUI.keyboardEvents.colLetter = tableUI.alphabet.alphabet[tableUI.alphabet.alphabet.indexOf(this.className)+1];
@@ -172,19 +175,49 @@ var tableUI = {
 
   newTab: function () {
     var tabs = document.getElementsByClassName("tabs")[0];
+    var number = (tabs.children.length + 1).toString();
+    if (tabs.lastChild) {
+      var n = parseInt(tabs.lastChild.firstChild.id.replace('tab-', ''));
+      if (parseInt(number - 1) !== n){
+        number = (n + 1).toString();
+      }
+    }
     this.create('div', tabs);
-    var number = tabs.children.length.toString();
     this.div.node.className = "tab";
-    this.div.addEvent('click', function(){tableUI.newTable(40, 15);});
     this.create('input', this.div.node);
     this.input.node.setAttribute('type', 'radio');
     this.input.node.setAttribute('name', 'tab-group-1');
     this.input.node.checked = true;
     this.input.node.id ='tab-' + number;
+    var last = tabs.children[tabs.children.length-1].firstChild;
     this.create('label', this.div.node);
     this.label.node.innerHTML = 'Sheet ' + number;
     this.label.node.setAttribute('for', this.input.node.id);
     this.newTable(40, 15);
+    this.div.addEvent('click', tableUI.tabClick());
+    tableData['Sheet'+number] = {rows:40, cols:15, data:{}};
+  },
+
+  tabClick: function () {
+    return function() {
+      if (!this.children[0].checked){
+        tableUI.newTable(40, 15);
+        tableUI.div.node = this;
+      }
+    };
+  },
+
+  removeTab: function () {
+    var div = tableUI.div.node.previousSibling || tableUI.div.node.nextSibling;
+
+    if (div) {
+      document.getElementsByClassName('tabs')[0].removeChild(tableUI.div.node);
+      console.log(div);
+        // tableUI.div.node = div;
+        tableUI.tabClick().bind(div)();
+        div.children[0].checked = true;
+    }
+
   },
 
   newTable: function (rows, cols){
@@ -195,24 +228,25 @@ var tableUI = {
       document.body.removeChild(footer.previousSibling);}
     document.body.insertBefore(div, footer);
     this.create('table', div.id);
+    window.addEventListener('keydown', this.keyboardEvents.onCells());
 
     for (var i = 0; i <= rows; i += 1){
-      this.create('row', this.table.node);
-      this.row.node.className = i.toString();
+      this.create('tr', this.table.node);
+      this.tr.node.className = i.toString();
       for (var j=0; j <= cols; j += 1){
-        this.create('cell', this.row.node);
+        this.create('td', this.tr.node);
         if (j >0) {
-          this.cell.node.className = this.alphabet.makeName(j-1, '');
+          this.td.node.className = this.alphabet.makeName(j-1, '');
           if (i===0){
-            this.cell.node.innerHTML = this.cell.node.className;
-            this.cell.addEvent('click', this.mouseEvents.colClick());}
+            this.td.node.innerHTML = this.td.node.className;
+            this.td.addEvent('click', this.mouseEvents.colClick());}
         }
         if (j > 0 && i > 0) {
-          this.cell.addEvent('click', this.mouseEvents.cellClick());
-          this.cell.addEvent('keydown', this.keyboardEvents.onCells());
+          this.td.addEvent('click', this.mouseEvents.cellClick());
+          // this.td.addEvent('keydown', this.keyboardEvents.onCells());
         } else {
-          if (i > 0) {this.cell.node.innerHTML = i;}
-          if (j === 0) {this.cell.addEvent('click', this.mouseEvents.rowClick());}
+          if (i > 0) {this.td.node.innerHTML = i;}
+          if (j === 0) {this.td.addEvent('click', this.mouseEvents.rowClick());}
         }
       }
     }
@@ -220,7 +254,7 @@ var tableUI = {
     window.addEventListener("scroll", this.scrollEvents.verticalAdd);
   },
 
-  create: function (element, parentElement) {
+  create: function (element, parentElement, before) {
       if (this[element] && this[element].tag){
         this[element].node = document.createElement(this[element].tag);
       } else {
@@ -233,13 +267,33 @@ var tableUI = {
         };
         this[element].node = document.createElement(element);
       }
-      if (parentElement) {
-        if (typeof parentElement === 'string'){
-          document.getElementById(parentElement).appendChild(this[element].node);
-        } else if (parentElement.hasOwnProperty('node')){
-          parentElement.node.appendChild(this[element].node);
-        } else {
-          parentElement.appendChild(this[element].node);
+      if (!before) {
+        if (parentElement) {
+          if (typeof parentElement === 'string'){
+            document.getElementById(parentElement).appendChild(this[element].node);
+          } else if (parentElement.hasOwnProperty('node')){
+            parentElement.node.appendChild(this[element].node);
+          } else {
+            parentElement.appendChild(this[element].node);
+          }
+        }
+      } else {
+        if (parentElement) {
+          var child;
+          var parent;
+          if (typeof parentElement === 'string'){
+            child = document.getElementById(parentElement);
+            parent = child.parentElement;
+            parent.insertBefore(this[element].node, child);
+          } else if (parentElement.hasOwnProperty('node')){
+            child = parentElement.node;
+            parent = child.parentElement;
+            parent.insertBefore(this[element].node, child);
+          } else {
+            child = parentElement;
+            parent = child.parentElement;
+            parent.insertBefore(this[element].node, child);
+          }
         }
       }
     },
@@ -250,15 +304,15 @@ var tableUI = {
     var rowLen = table.childNodes[0].childNodes.length;
     var colName = this.alphabet.makeName(rowLen-1);
     for (var i = 0; i < colLen; i += 1){
-      this.create('cell',this.table.node.childNodes[i]);
-      this.cell.node.className = colName;
+      this.create('td',this.table.node.childNodes[i]);
+      this.td.node.className = colName;
       if (i > 0){
-        this.cell.addEvent('click', this.mouseEvents.cellClick());
-        this.cell.addEvent('keydown', this.keyboardEvents.onCells());
+        this.td.addEvent('click', this.mouseEvents.cellClick());
+        this.td.addEvent('keydown', this.keyboardEvents.onCells());
       }
       if (i === 0){
-        this.cell.node.innerHTML = colName;
-        this.cell.addEvent('click', this.mouseEvents.colClick());
+        this.td.node.innerHTML = colName;
+        this.td.addEvent('click', this.mouseEvents.colClick());
       }
     }
   },
@@ -268,17 +322,17 @@ var tableUI = {
     var colLen = table.childNodes.length;
     var rowLen = table.childNodes[0].childNodes.length;
     var colName = this.alphabet.makeName(rowLen-1);
-    this.create('row', table);
-    this.row.node.className = colLen.toString();
+    this.create('tr', table);
+    this.tr.node.className = colLen.toString();
     for (var i = 0; i < rowLen; i += 1){
-      this.create('cell', this.row.node);
+      this.create('td', this.tr.node);
       if (i===0) {
-        this.cell.node.innerHTML = colLen.toString();
-        this.cell.addEvent('click', this.mouseEvents.rowClick());
+        this.td.node.innerHTML = colLen.toString();
+        this.td.addEvent('click', this.mouseEvents.rowClick());
       } else {
-        this.cell.node.className = this.alphabet.makeName(i-1, '');
-        this.cell.addEvent('click', this.mouseEvents.cellClick());
-        this.cell.addEvent('keydown', this.keyboardEvents.onCells());
+        this.td.node.className = this.alphabet.makeName(i-1, '');
+        this.td.addEvent('click', this.mouseEvents.cellClick());
+        this.td.addEvent('keydown', this.keyboardEvents.onCells());
       }
 
     }
@@ -288,12 +342,41 @@ var tableUI = {
     this.newTab();
   }
 };
+
+
+var tableData = {
+
+};
+
+
 tableUI.initTable();
 document.getElementById('new').addEventListener('click',function(){
   tableUI.newTab();
+});
 
+document.getElementById('delete').addEventListener('click',function(){
+  tableUI.removeTab();
 });
 
 
 
+function postJSONData(path, callback) {
+  var httpRequest = new XMLHttpRequest();
+  httpRequest.onreadystatechange = function() {
+     if (httpRequest.readyState === 4) {
+          if (httpRequest.status === 200) {
+                var data = httpRequest.responseText;
+                if (callback) callback(data);
+            }
+        }
+    };
+  httpRequest.open('POST', path);
+  httpRequest.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+  httpRequest.send(JSON.stringify({A1:1}));
+}
 
+
+
+postJSONData('//localhost:3000', function(data){
+    console.log(data);
+});
