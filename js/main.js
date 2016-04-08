@@ -64,7 +64,7 @@ var tableUI = {
         if (!this.parentNode.hasAttribute("data-active")){
           tableUI.mouseEvents._disableActive ();
           this.parentNode.setAttribute('data-active', '');
-          tableUI.tr.lastNode = this.parentNode;
+          tableUI.td.lastNode = this;
         }
     },
 
@@ -80,17 +80,23 @@ var tableUI = {
     },
 
     _disableActive: function () {
-      if (tableUI.tr.lastNode) {
-        tableUI.tr.lastNode.removeAttribute('data-active');
-      }
-      if (tableUI.td.lastNode) {
-        var col = document.querySelectorAll('.' + tableUI.td.lastNode.className);
-        tableUI.td.lastNode.removeAttribute('data-active');
-        if (tableUI.td.lastNode.childNodes[0]){
-          var text = tableUI.td.lastNode.childNodes[0].value || tableUI.td.lastNode.childNodes[0].data;
-          tableUI.td.lastNode.removeChild(tableUI.td.lastNode.childNodes[0]);
+      var col;
+      var row;
+      var element = tableUI.td.lastNode;
+      if (element) {
+        if (element.className) {
+          col = document.querySelectorAll('.' + element.className);
+        }
+        row = element.parentElement;
+        if (row.hasAttribute('data-active')) {
+          row.removeAttribute('data-active');
+        }
+        element.removeAttribute('data-active');
+        if (element.childNodes[0]){
+          var text = element.childNodes[0].value || element.childNodes[0].data;
+          element.removeChild(element.childNodes[0]);
           if (text) {
-            tableUI.td.lastNode.appendChild(document.createTextNode(text));
+            element.appendChild(document.createTextNode(text));
           }
         }
       }
@@ -115,60 +121,93 @@ var tableUI = {
     _onCells:function (event){
         var UI = tableUI;
         var element = tableUI.td.lastNode;
-        var rowNum = parseInt(element.parentElement.className);
+        if (!element) {
+          return;
+        }
+        var row = element.parentElement;
+        var rowNum = parseInt(row.className);
         var colName = element.className;
-        var col = document.querySelectorAll('.' + colName);
+        var col;
+        if (colName) {
+          col = document.querySelectorAll('.' + colName);
+        } else {
+          col = document.querySelectorAll('td:first-child');
+        }
         var table = document.querySelector('table');
-        console.log(event.target);
+        var isFirstChild = element === element.parentElement.firstChild;
+        var _leftRight = function (sibling) {
+          if (event.target.tagName === "INPUT") {
+            return;
+          }
+          if (sibling){
+            if (sibling.className) {
+              if (row === table.firstChild) {
+                UI.mouseEvents._colClick.bind(sibling)();
+              } else {
+                UI.mouseEvents._cellClick.bind(sibling)();
+              }
+            } else {
+              UI.mouseEvents._rowClick.bind(sibling)();
+            }
+          }
+        };
+        var _upDown = function (colSibling) {
+          if (colSibling) {
+            if (isFirstChild){
+              UI.mouseEvents._rowClick.bind(colSibling)();
+            } else if (colSibling.parentElement === table.firstChild) {
+              UI.mouseEvents._colClick.bind(colSibling)();
+            } else {
+              UI.mouseEvents._cellClick.bind(colSibling)();
+            }
+          }
+        };
+
         if (event.keyCode === UI.keyCodes.ENTER) {
           if (event.target.tagName === 'INPUT'){
             UI.mouseEvents._disableActive();
+            UI.mouseEvents._cellClick.bind(element)();
           } else {
-            if (rowNum > 0) {
+            if (rowNum > 0 && !isFirstChild) {
               UI.mouseEvents._cellClick.bind(element)();
             }
 
           }
 
         } else if (event.keyCode === tableUI.keyCodes.DOWN_ARROW) {
-          if (element.parentElement.hasAttribute("data-active")){
-            UI.mouseEvents._rowClick().bind(col[rowNum + 1])();
-            console.log(col[rowNum + 1]);
-          } else {
-            UI.mouseEvents._cellClick().bind(col[rowNum + 1])();
+          _upDown(col[rowNum + 1]);
+          event.preventDefault();
+          if (screen.height-element.getBoundingClientRect().top < 250){
+            document.body.scrollTop += 25;
           }
+
 
         } else if (event.keyCode === tableUI.keyCodes.UP_ARROW) {
-
-          if (rowNum > 0) {
-            UI.mouseEvents._cellClick().bind(col[rowNum - 1])();
-          }
-          if (rowNum === 1) {
-            UI.mouseEvents._colClick().bind(col[rowNum - 1])();
+          _upDown(col[rowNum - 1]);
+          event.preventDefault();
+          if (element.getBoundingClientRect().top < 100 ){
+            document.body.scrollTop -= 25;
           }
 
         } else if (event.keyCode === tableUI.keyCodes.LEFT_ARROW) {
-
-          if (element.previousSibling){
-            if (element.previousSibling.className) {
-              if (col[1].hasAttribute("data-active-col")) {
-                UI.mouseEvents._colClick().bind(element.previousSibling)();
-              } else {
-                UI.mouseEvents._cellClick().bind(element.previousSibling)();
-              }
-            } else {
-              UI.mouseEvents._rowClick().bind(element.previousSibling)();
+          _leftRight(element.previousSibling);
+          if (event.target.tagName !== "INPUT") {
+            event.preventDefault();
+            if (element.getBoundingClientRect().left < 200){
+              document.body.scrollLeft -= 100;
             }
-
-
           }
 
         } else if (event.keyCode === tableUI.keyCodes.RIGHT_ARROW) {
-          tableUI.mouseEvents._disableActive(this);
-          tableUI.keyboardEvents.colLetter = tableUI.alphabet.ALPHABET[tableUI.alphabet.ALPHABET.indexOf(this.className)+1];
-          tableUI.keyboardEvents.column = document.getElementsByClassName(tableUI.keyboardEvents.colLetter);
-          tableUI.keyboardEvents.rowNum = parseInt(this.parentElement.className);
-          tableUI.mouseEvents._cellClick ().bind(tableUI.keyboardEvents.column[tableUI.keyboardEvents.rowNum])();
+          _leftRight(element.nextSibling);
+          if (event.target.tagName !== "INPUT") {
+            event.preventDefault();
+              if (screen.width-element.getBoundingClientRect().left < 300){
+                document.body.scrollLeft += 100;
+          }
+
+          }
+
         }
     }
   },
@@ -242,8 +281,9 @@ var tableUI = {
 
   newTable: function (){
     var cols = Math.ceil(screen.width/100) + 4;
-    var rows = Math.ceil(screen.height/100) + 10;
-    console.log(rows, cols);
+    var rows = Math.ceil(screen.height/25) + 10;
+
+
     var div = document.getElementById(this.root);
     if (div.firstChild) {
       div.removeChild(div.firstChild);
