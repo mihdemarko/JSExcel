@@ -51,7 +51,7 @@ var tableUI = {
           tableUI.input.node.focus();
         } else {
           if (this.childNodes[0].data){
-            var text = this.childNodes[0].data;
+            var text = this.childNodes[0].value;
             this.removeChild(this.childNodes[0]);
             tableUI.create('input', this);
             tableUI.input.node.value = text;
@@ -96,7 +96,12 @@ var tableUI = {
           var text = element.childNodes[0].value || element.childNodes[0].data;
           element.removeChild(element.childNodes[0]);
           if (text) {
-            element.appendChild(document.createTextNode(text));
+            var dataNode = document.createTextNode(text);
+            dataNode.value = text;
+            if (text.charAt(0) === "=") {
+              dataNode.data = formula.evaluation(text);
+            }
+            element.appendChild(dataNode);
           }
         }
       }
@@ -125,7 +130,7 @@ var tableUI = {
           return;
         }
         var row = element.parentElement;
-        var rowNum = parseInt(row.className);
+        var rowNum = parseInt(row.className.replace('c',''));
         var colName = element.className;
         var col;
         if (colName) {
@@ -169,6 +174,7 @@ var tableUI = {
             UI.mouseEvents._cellClick.bind(element)();
           } else {
             if (rowNum > 0 && !isFirstChild) {
+              console.log(event);
               UI.mouseEvents._cellClick.bind(element)();
             }
 
@@ -293,7 +299,7 @@ var tableUI = {
     this.table._addEvent('click', this.mouseEvents._cell);
     for (var i = 0; i <= rows; i += 1){
       this.create('tr', this.table.node);
-      this.tr.node.className = i.toString();
+      this.tr.node.className = 'c' + i.toString();
       for (var j=0; j <= cols; j += 1){
         this.create('td', this.tr.node);
         if (j >0) {
@@ -402,6 +408,40 @@ var tableUI = {
 
 var tableData = {
 
+};
+
+var formula = {
+  evaluation: function (string) {
+    var result;
+    try {
+      string = this.parseExpression(string);
+      result = eval(string.substring(1));
+    } catch (e) {
+      console.log(e);
+      result = "ERROR";
+    }
+    return result;
+  },
+  parseExpression: function (string) {
+    var re = new RegExp("[A-Za-z]{1,}[0-9]{1,}","g");
+    var cells = string.match(re);
+    try {
+      cells.forEach(function (cell, i, arr){
+        var col = cell.replace(/[0-9]{1,}/,'');
+        var row = cell.replace(/[A-Za-z]{1,}/,'');
+        var cellNode = document.querySelector(".c" + row + " ." + col);
+        if (isNaN(cellNode.innerHTML)){
+          throw new Error("Is not a number");
+        }
+        string = string.replace(cell, cellNode.innerHTML);
+        console.log(string);
+      });
+      return string;
+    } catch (e) {
+      console.log(e);
+      return string;
+    }
+  }
 };
 
 
