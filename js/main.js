@@ -481,7 +481,11 @@ var dataExchange = {
       return res;
     },
     loadData: function (sheet) {
-      return JSON.parse(localStorage.getItem(sheet))[sheet].data;
+      try {
+        return JSON.parse(localStorage.getItem(sheet))[sheet].data;
+      } catch (e) {
+        return undefined;
+      }
     }
   }
 };
@@ -536,23 +540,23 @@ document.getElementById('delete').addEventListener('click',function(){
 
 
 
-function postJSONData(path, callback) {
-  var httpRequest = new XMLHttpRequest();
-  httpRequest.onreadystatechange = function() {
-     if (httpRequest.readyState === 4) {
-          if (httpRequest.status === 200) {
-                var data = httpRequest.responseText;
-                if (callback) callback(data);
-            }
-        }
-    };
-  httpRequest.open('POST', path);
-  httpRequest.setRequestHeader('Content-type', 'application/json; charset=utf-8');
-  httpRequest.send(JSON.stringify({A1:1}));
-}
+// function postJSONData(path, callback) {
+//   var httpRequest = new XMLHttpRequest();
+//   httpRequest.onreadystatechange = function() {
+//      if (httpRequest.readyState === 4) {
+//           if (httpRequest.status === 200) {
+//                 var data = httpRequest.responseText;
+//                 if (callback) callback(data);
+//             }
+//         }
+//     };
+//   httpRequest.open('POST', path);
+//   httpRequest.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+//   httpRequest.send(JSON.stringify({A1:1}));
+// }
 
 
 
-postJSONData('//localhost:3000', function(data){
-    // console.log(data);
-});
+// postJSONData('//localhost:3000', function(data){
+//     console.log(data);
+// });
