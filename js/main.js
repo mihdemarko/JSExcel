@@ -19,6 +19,28 @@ var tableUI = {
 
   col: {},
 
+  _dataTextNode: function (text) {
+
+      var dataNode = document.createTextNode(text);
+      Object.defineProperty(dataNode, 'value', {
+        get: function () {
+          return this.val;
+        },
+        set: function (data) {
+          var element = tableUI.td.lastNode;
+          var cellName = element.className + element.parentElement.className.replace('c','');
+          this.val = data;
+          tableData[tableUI.currentSheet].data[cellName] = data;
+          dataExchange.saveLocal(tableData);
+          console.log(dataExchange.loadLocal.loadData('Sheet 1'));
+        }
+      });
+      dataNode.value = text;
+      dataNode.data = formula.evaluation(text);
+      return dataNode;
+
+  },
+
 
   mouseEvents: {
     _cell : function (event) {
@@ -92,16 +114,11 @@ var tableUI = {
           row.removeAttribute('data-active');
         }
         element.removeAttribute('data-active');
-        if (element.childNodes[0]){
+        if (element.childNodes[0] && element.childNodes[0].tagName === "INPUT"){
           var text = element.childNodes[0].value || element.childNodes[0].data;
           element.removeChild(element.childNodes[0]);
           if (text) {
-            var dataNode = document.createTextNode(text);
-            dataNode.value = text;
-            if (text.charAt(0) === "=") {
-              dataNode.data = formula.evaluation(text);
-            }
-            element.appendChild(dataNode);
+            element.appendChild(tableUI._dataTextNode(text));
           }
         }
       }
@@ -174,7 +191,7 @@ var tableUI = {
             UI.mouseEvents._cellClick.bind(element)();
           } else {
             if (rowNum > 0 && !isFirstChild) {
-              console.log(event);
+              // console.log(event);
               UI.mouseEvents._cellClick.bind(element)();
             }
 
@@ -260,18 +277,25 @@ var tableUI = {
     this.create('label', this.div.node);
     this.label.node.innerHTML = 'Sheet ' + number;
     this.label.node.setAttribute('for', this.input.node.id);
-    this.newTable(40, 15);
-    this.div._addEvent('click', tableUI._tabClick());
-    tableData['Sheet'+number] = {rows:40, cols:15, data:{}};
+    this.newTable();
+    this.div._addEvent('click', tableUI._tabClick);
+    this.currentSheet = 'Sheet '+number;
+    tableData = {};
+    tableData['Sheet '+number] = {
+                                  rows:Math.ceil(screen.height/25) + 10,
+                                  cols:Math.ceil(screen.width/100) + 4,
+                                  data:{}
+                                };
+    // console.log(tableData);
   },
 
-  _tabClick: function () {
-    return function() {
+  _tabClick: function (event) {
       if (!this.children[0].checked){
-        tableUI.newTable(40, 15);
+        tableUI.newTable();
         tableUI.div.node = this;
+        tableUI.currentSheet = this.children[1].innerHTML;
+        // console.log(tableUI.currentSheet);
       }
-    };
   },
 
   removeTab: function () {
@@ -279,17 +303,13 @@ var tableUI = {
 
     if (div) {
       document.querySelectorAll('.tabs')[0].removeChild(tableUI.div.node);
-        tableUI._tabClick().bind(div)();
+        tableUI._tabClick.bind(div)();
         div.children[0].checked = true;
     }
 
   },
 
   newTable: function (){
-    var cols = Math.ceil(screen.width/100) + 4;
-    var rows = Math.ceil(screen.height/25) + 10;
-
-
     var div = document.getElementById(this.root);
     if (div.firstChild) {
       div.removeChild(div.firstChild);
@@ -297,10 +317,10 @@ var tableUI = {
     this.create('table', div);
     window.addEventListener('keydown', this.keyboardEvents._onCells);
     this.table._addEvent('click', this.mouseEvents._cell);
-    for (var i = 0; i <= rows; i += 1){
+    for (var i = 0; i <= this.rowNum; i += 1){
       this.create('tr', this.table.node);
       this.tr.node.className = 'c' + i.toString();
-      for (var j=0; j <= cols; j += 1){
+      for (var j=0; j <= this.colNum; j += 1){
         this.create('td', this.tr.node);
         if (j >0) {
           this.td.node.className = this.alphabet.makeName(j-1, '');
@@ -390,35 +410,95 @@ var tableUI = {
       this.create('td', this.tr.node);
       if (i===0) {
         this.td.node.innerHTML = colLen.toString();
-        // this.td._addEvent('click', this.mouseEvents._rowClick());
       } else {
         this.td.node.className = this.alphabet.makeName(i-1, '');
-        // this.td._addEvent('keydown', this.keyboardEvents._onCells());
       }
-
     }
-
   },
+
+  _dataPut: function (data) {
+    for (var key in data) {
+      var col = key.replace(/[0-9]{1,}/,'');
+      var row = key.replace(/[A-Za-z]{1,}/,'');
+      console.log(row);
+      console.log(document.querySelectorAll('.' + col));
+      var cell = document.querySelectorAll('.' + col)[row];
+      tableUI.td.lastNode = cell;
+      cell.appendChild(tableUI._dataTextNode(data[key]));
+      // if (data[key])
+      // cell.value =
+    }
+  },
+
   initTable: function (divId) {
     this.root = divId;
+    this.colNum = Math.ceil(screen.width/100) + 4;
+    this.rowNum = Math.ceil(screen.height/25) + 10;
+    var sheets = dataExchange.loadLocal.loadSheets();
     this.newTab();
+    this.currentSheet = 'Sheet 1';
+    var data = dataExchange.loadLocal.loadData('Sheet 1');
+    if (data) {
+      this._dataPut(data);
+    }
   }
 };
 
 
-var tableData = {
+var tableData = {};
 
+
+
+var dataExchange = {
+  names: [],
+  saveLocal: function () {
+    this.names = [];
+    for (var name in tableData) {
+      if (tableData.hasOwnProperty( name )){
+        this.names.push(name);
+      }
+    }
+    // console.log(this.names);
+    var data = JSON.stringify(tableData);
+    for (var i = 0; i < this.names.length; i += 1){
+      localStorage.setItem(this.names[i], data);
+    }
+  },
+  // loadLocal: function () {
+  //   console.log(Object.keys(localStorage));
+  //   var res = [];
+  //   Object.keys(localStorage).forEach (function(key) {
+  //     if (key.indexOf('Sheet') > -1) {
+  //       res.push(JSON.parse(localStorage[key]));
+  //     }
+  //   });
+  //   return res;
+  // }
+  loadLocal: {
+    loadSheets: function () {
+      var res = Object.keys(localStorage);
+      res.pop();
+      return res;
+    },
+    loadData: function (sheet) {
+      return JSON.parse(localStorage.getItem(sheet))[sheet].data;
+    }
+  }
 };
 
 var formula = {
   evaluation: function (string) {
     var result;
-    try {
-      string = this.parseExpression(string);
-      result = eval(string.substring(1));
-    } catch (e) {
-      console.log(e);
-      result = "ERROR";
+    if (string.charAt(0) !== '='){
+      result = string;
+    } else {
+      try {
+        string = this.parseExpression(string);
+        result = eval(string.substring(1));
+      } catch (e) {
+        // console.log(e);
+        result = "ERROR";
+      }
     }
     return result;
   },
@@ -434,11 +514,11 @@ var formula = {
           throw new Error("Is not a number");
         }
         string = string.replace(cell, cellNode.innerHTML);
-        console.log(string);
+        // console.log(string);
       });
       return string;
     } catch (e) {
-      console.log(e);
+      // console.log(e);
       return string;
     }
   }
@@ -474,5 +554,5 @@ function postJSONData(path, callback) {
 
 
 postJSONData('//localhost:3000', function(data){
-    console.log(data);
+    // console.log(data);
 });
